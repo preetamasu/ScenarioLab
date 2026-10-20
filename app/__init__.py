@@ -1,1 +1,0 @@
-"""ScenarioLab AI application."""
