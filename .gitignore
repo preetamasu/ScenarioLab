@@ -1,6 +1,11 @@
+# Local environment files
+.env
+.env.*
+
+# Maven and build output
 backend/HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -15,16 +20,17 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
+out/
 *.iws
 *.iml
 *.ipr
 
 ### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+**/nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
