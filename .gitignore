@@ -2,6 +2,13 @@
 .env
 .env.*
 
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+scripts/
+
 # Maven and build output
 backend/HELP.md
 target/
