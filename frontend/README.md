@@ -55,9 +55,10 @@ Cloning this frontend alone does not create the backend or AWS resources.
 
 ### 2. Install and configure
 
-From the cloned repository folder:
+From the cloned repository folder, enter the frontend directory:
 
 ```bash
+cd frontend
 npm install
 ```
 
