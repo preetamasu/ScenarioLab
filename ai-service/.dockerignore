@@ -1,0 +1,11 @@
+.env
+.env.*
+**/.env
+**/.env.*
+venv/
+.venv/
+.git/
+.idea/
+**/__pycache__/
+**/*.pyc
+scripts/
