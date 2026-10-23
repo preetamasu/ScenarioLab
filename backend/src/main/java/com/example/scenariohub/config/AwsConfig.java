@@ -1,5 +1,6 @@
 package com.example.scenariohub.config;
 
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
 public class AwsConfig {
@@ -35,5 +37,19 @@ public class AwsConfig {
                 .region(Region.of(region))
                 .build();
     }
+
+    @Bean
+    protected SqsAsyncClient sqsAsyncClient() {
+        return SqsAsyncClient.builder()
+                .region(Region.of(region))
+                .build();
+    }
+
+
+    @Bean
+    public SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient){
+        return SqsTemplate.newTemplate(sqsAsyncClient);
+    }
+
 
 }

@@ -1,6 +1,7 @@
 package com.example.scenariohub.service;
 
 import com.example.scenariohub.model.ConversationTurn;
+import com.example.scenariohub.model.LearningSession;
 import com.example.scenariohub.repository.ConversationTurnRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,10 @@ public class ConversationTurnService {
 
     private final ConversationTurnRepository conversationTurnRepository;
     private final LearningSessionService learningSessionService;
+    private final SQSService sqsService;
 
     public ConversationTurn createTurn(String sessionId, String userId, String audioS3Key) {
-        learningSessionService.getSession(sessionId, userId);
+       LearningSession session =  learningSessionService.getSession(sessionId, userId);
 
         if (audioS3Key == null || audioS3Key.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Audio S3 key is required");
@@ -36,7 +38,9 @@ public class ConversationTurnService {
         turn.setAudioS3Key(audioS3Key);
         turn.setCreatedAt(Instant.now());
 
-        return conversationTurnRepository.save(turn);
+        ConversationTurn turn1 = conversationTurnRepository.save(turn);
+        sqsService.sendTurn(turn1,session.getScenarioId());
+        return turn1 ;
     }
 
     public ConversationTurn getTurn(String sessionId, String userId, Integer turnNumber) {
@@ -51,6 +55,7 @@ public class ConversationTurnService {
     }
 
     public List<ConversationTurn> getTurns(String sessionId, String userId) {
+        learningSessionService.getSession(sessionId, userId);
         return conversationTurnRepository.findBySessionId(sessionId);
     }
 }

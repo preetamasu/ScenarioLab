@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,8 @@ public class ConversationController {
     private final ConversationTurnService conversationTurnService;
 
     @PostMapping("/sessions/{sessionId}/turns")
-    public ResponseEntity<TurnResponse> createConversation(@Valid @RequestBody CreateTurnRequest createTurnRequest, @PathVariable String sessionId){
-        ConversationTurn turn = conversationTurnService.createTurn(sessionId,"12",createTurnRequest.audioS3Key());
+    public ResponseEntity<TurnResponse> createConversation(@Valid @RequestBody CreateTurnRequest createTurnRequest, @PathVariable String sessionId, @AuthenticationPrincipal OidcUser user){
+        ConversationTurn turn = conversationTurnService.createTurn(sessionId,user.getSubject(),createTurnRequest.audioS3Key());
 
         TurnResponse response = new TurnResponse(
                 turn.getTurnId(),
@@ -38,8 +40,8 @@ public class ConversationController {
     }
 
     @GetMapping("/sessions/{sessionId}/turns")
-    public ResponseEntity<List<TurnResponse>> getConversation(@PathVariable String sessionId){
-        List<ConversationTurn> turns = conversationTurnService.getTurns(sessionId, "12");
+    public ResponseEntity<List<TurnResponse>> getConversation(@PathVariable String sessionId, @AuthenticationPrincipal OidcUser user){
+        List<ConversationTurn> turns = conversationTurnService.getTurns(sessionId, user.getSubject());
 
         List<TurnResponse> responses = turns.stream()
                 .map(turn -> new TurnResponse(
@@ -58,8 +60,8 @@ public class ConversationController {
     }
 
     @GetMapping("/sessions/{sessionId}/turns/{turnNumber}")
-    public ResponseEntity<TurnResponse> getTurn(@PathVariable String sessionId, @PathVariable Integer turnNumber){
-        ConversationTurn turn = conversationTurnService.getTurn(sessionId, "12", turnNumber);
+    public ResponseEntity<TurnResponse> getTurn(@PathVariable String sessionId, @PathVariable Integer turnNumber, @AuthenticationPrincipal OidcUser user){
+        ConversationTurn turn = conversationTurnService.getTurn(sessionId, user.getSubject(), turnNumber);
 
         TurnResponse response = new TurnResponse(
                 turn.getTurnId(),

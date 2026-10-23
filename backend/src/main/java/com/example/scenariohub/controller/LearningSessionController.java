@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -21,8 +23,8 @@ public class LearningSessionController {
 
 
     @PostMapping("/sessions")
-    public ResponseEntity<SessionResponse> createSession(@Valid @RequestBody CreateSessionRequest createSessionRequest){
-        LearningSession session = learningSessionService.createSession("12",createSessionRequest.scenarioId());
+    public ResponseEntity<SessionResponse> createSession(@Valid @RequestBody CreateSessionRequest createSessionRequest, @AuthenticationPrincipal OidcUser user){
+        LearningSession session = learningSessionService.createSession(user.getSubject(),createSessionRequest.scenarioId());
         SessionResponse sessionResponse = new SessionResponse(
                 session.getSessionId(),
                 session.getScenarioId(),
@@ -34,9 +36,9 @@ public class LearningSessionController {
     }
 
     @GetMapping("/sessions/{sessionId}")
-    public ResponseEntity<SessionResponse> getSession(@PathVariable String sessionId){
+    public ResponseEntity<SessionResponse> getSession(@PathVariable String sessionId, @AuthenticationPrincipal OidcUser user){
 
-        LearningSession learningSession = learningSessionService.getSession(sessionId,"12");
+        LearningSession learningSession = learningSessionService.getSession(sessionId,user.getSubject());
 
         SessionResponse sessionResponse = new SessionResponse(
                 learningSession.getSessionId(),
