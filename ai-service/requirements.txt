@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+langgraph
+boto3
+pydantic
+python-dotenv
+deepgram-sdk
+elevenlabs
+langchain-aws

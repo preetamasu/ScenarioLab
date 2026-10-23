@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: demo
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            authorization-grant-type: authorization_code
+            clientId: ${clientId}
+            clientSecret: ${clientSecret}
+            scope: openid
+            redirect-uri: http://localhost:8080/login/oauth2/code/cognito
+            clientName: clientName
+        provider:
+          cognito:
+            issuerUri: https://cognito-idp.us-east-1.amazonaws.com/${pool_id}
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+
+
+aws:
+  region: us-east-1
+  dynamodb:
+    session-table: LearningSessions
+    turn-table: ConversationTurns
+  s3:
+    audio-bucket: ${AUDIO_BUCKET_NAME}
+  sqs:
+    queue-url: ${uri}
+
+
+
+
