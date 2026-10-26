@@ -1,63 +1,113 @@
 export class ApiError extends Error {
-  constructor(message, status) { super(message); this.status = status; }
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
 }
 
 async function send(path, options = {}) {
   const response = await fetch(path, {
-    credentials: 'same-origin', redirect: 'manual',
-    signal: AbortSignal.timeout(20000), ...options,
+    credentials: "same-origin",
+    redirect: "manual",
+    cache: "no-store",
+    signal: AbortSignal.timeout(20000),
+    ...options,
   });
-  if (response.type === 'opaqueredirect' || response.status === 401 || response.status === 302) {
-    throw new ApiError('Your session has expired. Sign in again to continue.', 401);
+  if (
+    response.type === "opaqueredirect" ||
+    response.status === 401 ||
+    response.status === 302
+  ) {
+    throw new ApiError(
+      "Your session has expired. Sign in again to continue.",
+      401,
+    );
   }
   return response;
 }
 
-// Existing backend has no /me endpoint. An owned-session lookup distinguishes
-// authenticated JSON responses from Spring Security's login redirect.
+async function getAuthStatus() {
+  const response = await send("/api/v1/auth/status", {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      "The backend login-status endpoint is unavailable. Restart the updated Spring Boot application.",
+      response.status,
+    );
+  }
+  const status = await response.json().catch(() => null);
+  if (!status || typeof status.authenticated !== "boolean") {
+    throw new ApiError("The backend returned an invalid login status.", 502);
+  }
+  return status;
+}
+
 export async function checkSession() {
-  const response = await send('/api/v1/sessions/00000000-0000-0000-0000-000000000000');
-  if (response.status === 404 || response.status === 403 || response.ok) return true;
-  throw new ApiError('Cannot reach the backend. Check that Spring Boot is running.', response.status);
+  const status = await getAuthStatus();
+  if (!status.authenticated) throw new ApiError("Please sign in to continue.", 401);
+  return true;
 }
 
 export async function getCsrf() {
-  // Spring Security's existing GET /logout renders its CSRF-protected form.
-  // Reading it does not log out; only POST /logout does that.
-  const response = await send('/logout', { headers: { Accept: 'text/html' } });
-  const document = new DOMParser().parseFromString(await response.text(), 'text/html');
-  const token = document.querySelector('input[name="_csrf"]')?.value;
-  if (!token) throw new ApiError('Could not load the security token. Please sign in again.', 401);
-  return token;
+  const status = await getAuthStatus();
+  if (!status.authenticated) throw new ApiError("Please sign in to continue.", 401);
+  if (!status.csrfToken) throw new ApiError("The backend did not provide a security token.", 502);
+  return status.csrfToken;
 }
 
 export async function api(path, body) {
-  const headers = { Accept: 'application/json' };
+  const headers = { Accept: "application/json" };
   if (body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    headers['X-CSRF-TOKEN'] = await getCsrf();
+    headers["Content-Type"] = "application/json";
+    headers["X-CSRF-TOKEN"] = await getCsrf();
   }
   const response = await send(`/api/v1${path}`, {
-    method: body === undefined ? 'GET' : 'POST', headers,
+    method: body === undefined ? "GET" : "POST",
+    headers,
     ...(body !== undefined && { body: JSON.stringify(body) }),
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(data.detail || data.message || `Request failed (${response.status}).`, response.status);
+  if (!response.ok)
+    throw new ApiError(
+      data.detail || data.message || `Request failed (${response.status}).`,
+      response.status,
+    );
   return data;
 }
 
 export async function signOut() {
   const token = await getCsrf();
-  await send('/logout', {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  await send("/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ _csrf: token }),
-  }).catch(error => { if (error.status !== 401) throw error; });
+  }).catch((error) => {
+    if (error.status !== 401) throw error;
+  });
 }
 
 export async function uploadAudio(url, blob) {
-  const response = await fetch(url, {
-    method: 'PUT', headers: { 'Content-Type': blob.type }, body: blob,
-    credentials: 'omit', signal: AbortSignal.timeout(90000),
-  });
-  if (!response.ok) throw new Error(`Audio upload failed (${response.status}). Check the S3 bucket's CORS configuration.`);
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": blob.type },
+      body: blob,
+      credentials: "omit",
+      signal: AbortSignal.timeout(90000),
+    });
+  } catch (error) {
+    if (error.name === "TimeoutError")
+      throw new Error(
+        "The audio upload timed out. Your recording is still here; try again.",
+      );
+    throw new Error(
+      "The browser could not upload the recording. Check your connection and that S3 CORS allows this site. Your recording has been kept.",
+    );
+  }
+  if (!response.ok)
+    throw new Error(
+      `Audio upload failed (${response.status}). Check the S3 bucket's CORS configuration.`,
+    );
 }
