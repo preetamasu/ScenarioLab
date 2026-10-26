@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="310" height="64" viewBox="0 0 310 64">
+  <rect x="0" y="8" width="48" height="48" rx="11" fill="#5fe3b5"/>
+  <g stroke="#103b2e" stroke-width="3" stroke-linecap="round">
+    <path d="M12 28v8M18 23v18M24 18v28M30 25v14M36 29v6"/>
+  </g>
+  <text x="62" y="44" fill="#eceef0" font-family="Arial, sans-serif" font-size="35" font-weight="500" letter-spacing="-1.5">scenario<tspan fill="#8b929c">lab</tspan></text>
+</svg>

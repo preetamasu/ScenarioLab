@@ -1,4 +1,4 @@
-﻿# ScenarioLab
+# ScenarioLab
 
 ScenarioLab is an AI voice role-play application that helps students practice workplace conversations. Instead of typing into a chatbot, a student speaks to an AI character and receives a spoken reply.
 
@@ -108,7 +108,7 @@ Uploads use presigned URLs; the bucket does not need to be public.
 npm run dev
 ```
 
-Open **http://localhost:5173**, allow the sign-in popup, and log in. Start a practice session, allow microphone access, record a response, and send it.
+Open **http://localhost:5173**, sign in through Cognito in the same tab, and return to the frontend automatically. Start a practice session, allow microphone access, record a response, and send it.
 
 ## Production build
 
